@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from .models import Conversation, Message
 from .serializers import ConversationSerializer, MessageSerializer
 from django.contrib.auth import get_user_model
+from django_filters import rest_framework as filters
 
 User = get_user_model()
 
