@@ -48,8 +48,10 @@ class MessageViewSet(viewsets.ModelViewSet):
         return self.queryset.filter(conversation__participants=self.request.user)
     
     def perform_create(self, serializer):
-        # Ensure the user can only send messages in a conversation they belong to
-        conversation = serializer.validated_data['conversation']
+        conversation_id = self.request.data.get('conversation')  # assumes field is named 'conversation'
+        conversation = get_object_or_404(Conversation, id=conversation_id)
+
         if self.request.user not in conversation.participants.all():
-            raise serializers.ValidationError("You are not a participant of this conversation.")
+            return Response({'detail': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
+
         serializer.save(sender=self.request.user)
