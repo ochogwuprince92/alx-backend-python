@@ -6,6 +6,7 @@ from .serializers import ConversationSerializer, MessageSerializer
 from django.contrib.auth import get_user_model
 from django_filters import rest_framework as filters
 from .permissions import IsOwnerOrParticipant
+from rest_framework.permissions import IsAuthenticated
 
 User = get_user_model()
 
@@ -17,6 +18,8 @@ class ConversationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # List only conversations the current user is part of
         return Conversation.objects.filter(participants=self.request.user)
+    
+        return self.queryset.filter(participants=self.request.user)
 
     def perform_create(self, serializer):
         # Automatically add the current user as a participant
@@ -42,7 +45,8 @@ class MessageViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # Show messages only from conversations the user is part of
         return Message.objects.filter(sender=self.request.user)
-
+        return self.queryset.filter(conversation__participants=self.request.user)
+    
     def perform_create(self, serializer):
         # Ensure the user can only send messages in a conversation they belong to
         conversation = serializer.validated_data['conversation']
