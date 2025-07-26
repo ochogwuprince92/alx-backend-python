@@ -1,12 +1,17 @@
 # chats/permissions.py
 
-from rest_framework.permissions import BasePermission
+from rest_framework import permissions
 
-class IsOwnerOrParticipant(BasePermission):
+class IsOwnerOrParticipant(permissions.BasePermission):
     """
-    Custom permission to only allow users to access their own messages or conversations.
+    Custom permission to allow only owners or conversation participants to access the object.
     """
 
     def has_object_permission(self, request, view, obj):
-        # Assumes `obj` has a `sender` or `participants` attribute
-        return request.user == obj.sender or request.user in obj.participants.all()
+        # For a Conversation object
+        if hasattr(obj, 'participants'):
+            return request.user in obj.participants.all()
+        # For a Message object
+        if hasattr(obj, 'conversation') and hasattr(obj.conversation, 'participants'):
+            return request.user in obj.conversation.participants.all()
+        return False
