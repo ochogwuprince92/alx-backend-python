@@ -1,12 +1,16 @@
-from rest_framework import viewsets, permissions, serializers
+from rest_framework import viewsets, permissions, serializers, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import Conversation, Message
 from .serializers import ConversationSerializer, MessageSerializer
 from django.contrib.auth import get_user_model
 from django_filters import rest_framework as filters
-from .permissions import IsOwnerOrParticipant
+from .permissions import IsOwnerOrParticipant. isParticipantOfConversation
 from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_frmework.exceptions import Permission_denied
+from .pagination import MessagePagination
+from .filters import MessageFilter
 
 User = get_user_model()
 
@@ -41,17 +45,20 @@ class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrParticipant]
+    pagination_class = MessagePagination
+    filter_backends = (DjangoFilterBackend)
+    filterset_class = MessageFilter
 
     def get_queryset(self):
         # Show messages only from conversations the user is part of
         return Message.objects.filter(sender=self.request.user)
         return self.queryset.filter(conversation__participants=self.request.user)
     
-    def perform_create(self, serializer):
-        conversation_id = self.request.data.get('conversation')  # assumes field is named 'conversation'
-        conversation = get_object_or_404(Conversation, id=conversation_id)
+    def create(self, request, *args, **kwargs):
+        conversation_id = request.data.get('conversation')
+        conversation = Conversation.objects.get(id=conversation_id)
 
-        if self.request.user not in conversation.participants.all():
-            return Response({'detail': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
+        if request.user not in conversation.participants.all():
+            raise PermissionDenied("You are not a participant in this conversation.")
 
-        serializer.save(sender=self.request.user)
+        return super().create(request, *args, **kwargs)
