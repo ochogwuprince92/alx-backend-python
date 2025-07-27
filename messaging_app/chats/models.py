@@ -24,6 +24,10 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.username} ({self.email})"
+    
+    @property
+    def id(self):
+        return self.user_id
 
 
 class Conversation(models.Model):
@@ -34,6 +38,9 @@ class Conversation(models.Model):
     def __str__(self):
         return f"Conversation {self.conversation_id}"
 
+    @property
+    def id(self):
+        return self.conversation_id
 
 class Message(models.Model):
     message_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

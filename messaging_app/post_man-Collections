@@ -1,0 +1,168 @@
+{
+    "info": {
+        "name": "Messaging API Collection",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Login (JWT Token)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"email\": \"ochogwuprince92@gmail.com\", \"password\": \"Ogwaa123#\"}"
+                },
+                "url": {
+                    "raw": "http://127.0.0.1:8000/api/token/",
+                    "protocol": "http",
+                    "host": [
+                        "127.0.0.1"
+                    ],
+                    "port": "8000",
+                    "path": [
+                        "api",
+                        "token",
+                        ""
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Create Conversation",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{jwt_token}}"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"participant_ids\": [2]}"
+                },
+                "url": {
+                    "raw": "http://127.0.0.1:8000/api/chats/conversations/",
+                    "protocol": "http",
+                    "host": [
+                        "127.0.0.1"
+                    ],
+                    "port": "8000",
+                    "path": [
+                        "api",
+                        "chats",
+                        "conversations",
+                        ""
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Send Message (Nested)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{jwt_token}}"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"content\": \"Hello there!\"}"
+                },
+                "url": {
+                    "raw": "http://127.0.0.1:8000/api/chats/conversations/1/messages/",
+                    "protocol": "http",
+                    "host": [
+                        "127.0.0.1"
+                    ],
+                    "port": "8000",
+                    "path": [
+                        "api",
+                        "chats",
+                        "conversations",
+                        "1",
+                        "messages",
+                        ""
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Get All Conversations",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{jwt_token}}"
+                    }
+                ],
+                "url": {
+                    "raw": "http://127.0.0.1:8000/api/chats/conversations/",
+                    "protocol": "http",
+                    "host": [
+                        "127.0.0.1"
+                    ],
+                    "port": "8000",
+                    "path": [
+                        "api",
+                        "chats",
+                        "conversations",
+                        ""
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Get Messages for a Conversation",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{jwt_token}}"
+                    }
+                ],
+                "url": {
+                    "raw": "http://127.0.0.1:8000/api/chats/conversations/1/messages/",
+                    "protocol": "http",
+                    "host": [
+                        "127.0.0.1"
+                    ],
+                    "port": "8000",
+                    "path": [
+                        "api",
+                        "chats",
+                        "conversations",
+                        "1",
+                        "messages",
+                        ""
+                    ]
+                }
+            }
+        }
+    ],
+    "event": [],
+    "variable": [
+        {
+            "key": "jwt_token",
+            "value": ""
+        }
+    ]
+}

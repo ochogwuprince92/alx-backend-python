@@ -2,6 +2,11 @@
 
 from rest_framework import permissions
 
+class IsOwnerOrParticipant(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        # Assuming 'participants' is a list of users in the conversation
+        return request.user in obj.participants.all()
+        
 class IsParticipantOfConversation(permissions.BasePermission):
     """
     Only participants of a conversation can access and modify it.

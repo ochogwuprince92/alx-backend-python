@@ -7,10 +7,10 @@ class MessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Message
-        fields = ['id', 'sender', 'sender_username', 'conversation', 'content', 'timestamp']
+        fields = ['id', 'sender', 'sender_username', 'conversation', 'message_body', 'sent_at']
 
     # Validation example (using serializers.ValidationError)
-    def validate_content(self, value):
+    def validate_message_body(self, value):
         if not value.strip():
             raise serializers.ValidationError("Message content cannot be empty.")
         return value
@@ -19,7 +19,7 @@ class MessageSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'phone_number', 'bio']
+        fields = ['id', 'username', 'email', 'phone_number']
 
 # Conversation Serializer (with SerializerMethodField)
 class ConversationSerializer(serializers.ModelSerializer):
@@ -31,5 +31,5 @@ class ConversationSerializer(serializers.ModelSerializer):
         fields = ['id', 'participants', 'created_at', 'messages']
 
     def get_messages(self, obj):
-        messages = obj.messages.all().order_by('timestamp')
+        messages = obj.messages.all().order_by('sent_at')
         return MessageSerializer(messages, many=True).data
