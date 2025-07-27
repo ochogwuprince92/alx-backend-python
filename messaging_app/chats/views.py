@@ -11,6 +11,7 @@ from rest_framework.exceptions import PermissionDenied
 from .pagination import MessagePagination
 from .filters import MessageFilter
 from django.shortcuts import get_object_or_404
+from rest_framework.status import HTTP_403_FORBIDDEN
 
 User = get_user_model()
 
@@ -54,8 +55,9 @@ class MessageViewSet(viewsets.ModelViewSet):
         conversation_id = request.data.get('conversation')
         conversation = get_object_or_404(Conversation, pk=conversation_id)
 
-        if request.user not in conversation.participants.all():
-            raise PermissionDenied("You are not a participant in this conversation.")
+    if request.user not in conversation.participants.all():
+        raise PermissionDenied(detail="You are not a participant in this conversation.", code=HTTP_403_FORBIDDEN)
+
 
         return super().create(request, *args, **kwargs)
 
