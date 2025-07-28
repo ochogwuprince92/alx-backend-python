@@ -9,3 +9,28 @@ def delete_user(request):
     logout(request)  # log out the user first
     user.delete()    # trigger post_delete signal
     return redirect('home')  # redirect to home or goodbye page
+
+# Fetch top-level messages in a conversation with replies
+messages = Message.objects.filter(parent_message__isnull=True).select_related('sender', 'receiver').prefetch_related('replies')
+
+def get_threaded_messages(message):
+    """
+    Recursively get all replies for a given message
+    """
+    thread = []
+    for reply in message.replies.all():
+        thread.append({
+            'id': reply.id,
+            'sender': reply.sender.username,
+            'content': reply.content,
+            'timestamp': reply.timestamp,
+            'replies': get_threaded_messages(reply)  # 🔁 recursive
+        })
+    return thread
+
+top_messages = Message.objects.filter(parent_message__isnull=True).prefetch_related('replies', 'replies__sender', 'replies__replies')
+
+for msg in top_messages:
+    print(f"{msg.sender.username}: {msg.content}")
+    replies = get_threaded_messages(msg)
+    print(replies)
