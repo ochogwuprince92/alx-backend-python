@@ -10,7 +10,8 @@ def delete_user(request):
     logout(request)  # log out the user first
     user.delete()    # trigger post_delete signal
     return redirect('home')  # redirect to home or goodbye page
-    
+
+@login_required    
 def user_messages(request):
     # Step 1: Filter messages where sender is the logged-in user
     messages = Message.objects.filter(sender=request.user)\
@@ -19,8 +20,16 @@ def user_messages(request):
 
     return render(request, 'messaging/user_messages.html', {'messages': messages})
 
+@login_required
+def unread_messages_view(request):
+    unread_messages = Message.unread.for_user(request.user)
+
+    return render(request, 'messaging/unread_messages.html', {
+        'messages': unread_messages
+    })
+
 # Fetch top-level messages in a conversation with replies
-messages = Message.objects.filter(parent_message__isnull=True).select_related('sender', 'receiver').prefetch_related('replies')
+# messages = Message.objects.filter(parent_message__isnull=True).select_related('sender', 'receiver').prefetch_related('replies')
 
 def get_threaded_messages(message):
     """
@@ -33,13 +42,18 @@ def get_threaded_messages(message):
             'sender': reply.sender.username,
             'content': reply.content,
             'timestamp': reply.timestamp,
-            'replies': get_threaded_messages(reply)  # 🔁 recursive
+            'replies': get_threaded_messages(reply)
         })
     return thread
 
-top_messages = Message.objects.filter(parent_message__isnull=True).prefetch_related('replies', 'replies__sender', 'replies__replies')
+# top_messages = Message.objects.filter(parent_message__isnull=True).prefetch_related('replies', 'replies__sender', 'replies__replies')
 
 for msg in top_messages:
     print(f"{msg.sender.username}: {msg.content}")
     replies = get_threaded_messages(msg)
     print(replies)
+
+def inbox(request):
+    user = request.user
+    unread_messages = Message.unread.for_user(user)
+    ...
