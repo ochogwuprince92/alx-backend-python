@@ -1,7 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.contrib.auth.models import User
+from .models import Message, Notification
 
 @login_required
 def delete_user(request):
@@ -9,6 +10,14 @@ def delete_user(request):
     logout(request)  # log out the user first
     user.delete()    # trigger post_delete signal
     return redirect('home')  # redirect to home or goodbye page
+    
+def user_messages(request):
+    # Step 1: Filter messages where sender is the logged-in user
+    messages = Message.objects.filter(sender=request.user)\
+        .select_related('receiver')\
+        .prefetch_related('replies', 'replies__sender')
+
+    return render(request, 'messaging/user_messages.html', {'messages': messages})
 
 # Fetch top-level messages in a conversation with replies
 messages = Message.objects.filter(parent_message__isnull=True).select_related('sender', 'receiver').prefetch_related('replies')
