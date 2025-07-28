@@ -25,11 +25,11 @@ def unread_messages_view(request):
     unread_messages = Message.unread.for_user(request.user)
 
     return render(request, 'messaging/unread_messages.html', {
-        'messages': unread_messages
+        'unread_messages': unread_messages
     })
 
 # Fetch top-level messages in a conversation with replies
-# messages = Message.objects.filter(parent_message__isnull=True).select_related('sender', 'receiver').prefetch_related('replies')
+messages = Message.objects.filter(parent_message__isnull=True).select_related('sender', 'receiver').prefetch_related('replies')
 
 def get_threaded_messages(message):
     """
@@ -46,7 +46,7 @@ def get_threaded_messages(message):
         })
     return thread
 
-# top_messages = Message.objects.filter(parent_message__isnull=True).prefetch_related('replies', 'replies__sender', 'replies__replies')
+top_messages = Message.objects.filter(parent_message__isnull=True).prefetch_related('replies', 'replies__sender', 'replies__replies')
 
 for msg in top_messages:
     print(f"{msg.sender.username}: {msg.content}")
