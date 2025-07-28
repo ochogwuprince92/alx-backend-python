@@ -3,6 +3,7 @@ from django.contrib.auth import logout
 from django.shortcuts import redirect, render
 from django.contrib.auth.models import User
 from .models import Message, Notification
+from django.views.decorators.cache import cache_page
 
 @login_required
 def delete_user(request):
@@ -57,3 +58,8 @@ def inbox(request):
     user = request.user
     unread_messages = Message.unread.for_user(user)
     ...
+
+@cache_page(60)  # Caches this view for 60 seconds
+def user_inbox(request):
+    messages = Message.objects.filter(receiver=request.user).select_related('sender').only('id', 'sender', 'content', 'timestamp')
+    return render(request, 'messaging/inbox.html', {'messages': messages})
