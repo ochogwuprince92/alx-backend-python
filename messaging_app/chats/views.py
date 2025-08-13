@@ -55,9 +55,8 @@ class MessageViewSet(viewsets.ModelViewSet):
         conversation_id = request.data.get('conversation')
         conversation = get_object_or_404(Conversation, pk=conversation_id)
 
-    if request.user not in conversation.participants.all():
-        raise PermissionDenied(detail="You are not a participant in this conversation.", code=HTTP_403_FORBIDDEN)
-
+        if request.user not in conversation.participants.all():
+            raise PermissionDenied(detail="You are not a participant in this conversation.", code=HTTP_403_FORBIDDEN)
 
         return super().create(request, *args, **kwargs)
 

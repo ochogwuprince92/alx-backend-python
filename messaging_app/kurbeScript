@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# kurbeScript
+# Purpose: Start a Kubernetes cluster locally with Minikube, verify status, and list pods.
+
+echo "=== Checking if Minikube is installed ==="
+if ! command -v minikube &> /dev/null
+then
+    echo "Minikube is not installed. Installing Minikube..."
+    curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+    sudo install minikube-linux-amd64 /usr/local/bin/minikube
+    rm minikube-linux-amd64
+else
+    echo "Minikube is already installed."
+fi
+
+echo "=== Checking if kubectl is installed ==="
+if ! command -v kubectl &> /dev/null
+then
+    echo "kubectl not found. Installing kubectl..."
+    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    chmod +x kubectl
+    sudo mv kubectl /usr/local/bin/
+else
+    echo "kubectl is already installed."
+fi
+
+echo "=== Starting Minikube cluster ==="
+minikube start --driver=docker
+
+echo "=== Verifying Kubernetes cluster status ==="
+kubectl cluster-info
+
+echo "=== Retrieving available pods in all namespaces ==="
+kubectl get pods --all-namespaces

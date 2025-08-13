@@ -1,4 +1,3 @@
-version: "3.9"
 
 services:
   db:
@@ -39,6 +38,8 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
+    env_file:
+      - .env
     volumes:
       - .:/app
     ports:
@@ -49,3 +50,4 @@ services:
 
 volumes:
   db_data:
+  mysql_data:
