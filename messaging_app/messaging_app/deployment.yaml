@@ -5,7 +5,7 @@ metadata:
   labels:
     app: messaging-app
 spec:
-  replicas: 2   # Number of Pods to run
+  replicas: 1   # Number of Pods to run
   selector:
     matchLabels:
       app: messaging-app
@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: messaging-app
-        image: your-dockerhub-username/messaging-app:latest  # Replace with your Docker image
+        image: ochogwuprince/messaging-app:latest  # Replace with your Docker image
         ports:
         - containerPort: 8000
         env:

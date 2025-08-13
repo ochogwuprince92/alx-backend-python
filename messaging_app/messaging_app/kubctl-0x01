@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+# Scale the Django app, verify pods, load test with wrk, and show resource usage.
+# Expected deployment/service names (adjust if yours differ):
+#   Deployment: messaging-app-deployment
+#   Service:    messaging-app-service
+# Namespace:    default
+
+set -euo pipefail
+
+DEPLOYMENT_NAME="${DEPLOYMENT_NAME:-messaging-app-deployment}"
+SERVICE_NAME="${SERVICE_NAME:-messaging-app-service}"
+NAMESPACE="${NAMESPACE:-default}"
+SERVICE_PORT="${SERVICE_PORT:-8000}"
+LABEL_SELECTOR="${LABEL_SELECTOR:-app=messaging-app}"
+
+bold() { printf "\n\033[1m%s\033[0m\n" "$*"; }
+note() { printf "👉 %s\n" "$*"; }
+warn() { printf "\033[33m⚠ %s\033[0m\n" "$*"; }
+err()  { printf "\033[31m✖ %s\033[0m\n" "$*" >&2; }
+
+require() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    err "Required command '$1' not found."
+    exit 1
+  fi
+}
+
+cleanup() {
+  if [[ -n "${PF_PID:-}" ]] && kill -0 "$PF_PID" 2>/dev/null; then
+    note "Stopping port-forward (pid $PF_PID)"
+    kill "$PF_PID" >/dev/null 2>&1 || true
+  fi
+}
+trap cleanup EXIT
+
+require kubectl
+
+bold "1) Scaling deployment '$DEPLOYMENT_NAME' to 3 replicas…"
+kubectl -n "$NAMESPACE" scale deployment "$DEPLOYMENT_NAME" --replicas=3
+kubectl -n "$NAMESPACE" rollout status deployment "$DEPLOYMENT_NAME" --timeout=120s
+
+bold "2) Verifying Pods are running…"
+kubectl -n "$NAMESPACE" get pods -l "$LABEL_SELECTOR" -o wide
+
+bold "3) Preparing endpoint for load testing…"
+URL=""
+if command -v minikube >/dev/null 2>&1; then
+  # Try to get a cluster-accessible URL via minikube service
+  if minikube status >/dev/null 2>&1; then
+    if URL="$(minikube -p minikube service "$SERVICE_NAME" -n "$NAMESPACE" --url 2>/dev/null | head -n1)"; then
+      note "Using minikube service URL: $URL"
+    fi
+  fi
+fi
+
+# If no URL yet, fall back to local port-forward to the deployment
+if [[ -z "${URL}" ]]; then
+  note "Falling back to 'kubectl port-forward' on localhost:$SERVICE_PORT …"
+  # Prefer forwarding the service; if it fails, forward the deployment’s first Pod
+  if kubectl -n "$NAMESPACE" port-forward "svc/$SERVICE_NAME" "$SERVICE_PORT:$SERVICE_PORT" >/tmp/k8s_pf.log 2>&1 & then
+    PF_PID=$!
+    sleep 2
+    URL="http://127.0.0.1:$SERVICE_PORT"
+  else
+    warn "Service port-forward failed; trying a Pod directly…"
+    POD="$(kubectl -n "$NAMESPACE" get pods -l "$LABEL_SELECTOR" -o jsonpath='{.items[0].metadata.name}')"
+    kubectl -n "$NAMESPACE" port-forward "pod/$POD" "$SERVICE_PORT:$SERVICE_PORT" >/tmp/k8s_pf.log 2>&1 &
+    PF_PID=$!
+    sleep 2
+    URL="http://127.0.0.1:$SERVICE_PORT"
+  fi
+  note "Using URL: $URL"
+fi
+
+bold "4) Load testing with wrk (15s, 2 threads, 50 connections)…"
+if command -v wrk >/dev/null 2>&1; then
+  # Hit root path; adjust if your app serves on a different path
+  wrk -t2 -c50 -d15s "$URL/"
+else
+  warn "wrk is not installed; skipping load test."
+  warn "Install wrk (e.g., 'sudo apt-get install wrk' or build from source) and re-run."
+fi
+
+bold "5) Monitoring resource usage (kubectl top)…"
+if kubectl top nodes >/dev/null 2>&1; then
+  note "Nodes:"
+  kubectl top nodes
+  note "Pods (filtered to label: $LABEL_SELECTOR):"
+  # Show all pods then filter; 'kubectl top' doesn’t support -l in all distros
+  kubectl top pods --all-namespaces | (head -n1; grep -E "\s${NAMESPACE}\s" || true)
+  kubectl -n "$NAMESPACE" top pods || true
+else
+  warn "'kubectl top' is unavailable. You likely need the metrics-server in your cluster."
+  warn "On minikube: minikube addons enable metrics-server"
+fi
+
+bold "Done ✅"
