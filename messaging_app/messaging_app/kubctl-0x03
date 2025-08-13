@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Apply the updated blue deployment (triggers rolling update)
+kubectl apply -f blue_deployment.yaml
+
+# Monitor the rollout status until it completes
+kubectl rollout status deployment/messaging-app-blue
+
+# Test for downtime using curl in a loop
+# Replace 'your-service-url' with your Ingress or NodePort URL
+SERVICE_URL="http://localhost/api/"  # example, adjust to your environment
+
+echo "Testing service availability during rollout..."
+for i in {1..20}; do
+    if curl -s --max-time 2 "$SERVICE_URL" > /dev/null; then
+        echo "[$i] Service is UP"
+    else
+        echo "[$i] Service is DOWN"
+    fi
+    sleep 2
+done
+
+# Show current pods to verify update
+kubectl get pods -o wide

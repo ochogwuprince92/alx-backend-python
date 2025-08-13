@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
         - name: messaging-app
-          image: ochogwuprince/messaging-app:latest
+          image: ochogwuprince/messaging-app:2.0
           ports:
             - containerPort: 8000
