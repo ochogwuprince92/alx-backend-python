@@ -1,5 +1,4 @@
 #!/bin/bash
-# messaging_app/kubctl-0x02
 
 # Deploy blue version
 kubectl apply -f blue_deployment.yaml
