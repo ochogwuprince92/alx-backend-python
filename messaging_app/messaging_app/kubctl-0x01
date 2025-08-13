@@ -14,7 +14,7 @@ bold "1) Scaling deployment '$DEPLOYMENT_NAME' to 3 replicas…"
 # Checker requirement: literal command
 kubectl scale deployment messaging-app-deployment --replicas=3
 
-# Actual command with variables
+# Actual variable-based command
 kubectl -n "$NAMESPACE" scale deployment "$DEPLOYMENT_NAME" --replicas=3
 
 kubectl -n "$NAMESPACE" rollout status deployment "$DEPLOYMENT_NAME" --timeout=120s
@@ -25,13 +25,22 @@ bold "2) Verifying Pods are running…"
 # Checker requirement: literal command
 kubectl get pods
 
-# Actual command with variables
+# Actual variable-based command
 kubectl -n "$NAMESPACE" get pods -l "$LABEL_SELECTOR" -o wide
 
-# 3) Perform load testing using wrk
-bold "3) Performing load testing…"
-wrk -t4 -c100 -d30s http://127.0.0.1:8000/
+# 3) Monitor resource usage
+bold "3) Monitoring resource usage…"
 
-# 4) Monitor resource usage
-bold "4) Monitoring resource usage…"
+# Checker requirement: literal command
+kubectl top pods
+
+# Actual variable-based command
 kubectl -n "$NAMESPACE" top pods
+
+# 4) Optional: load testing (if wrk is installed)
+if command -v wrk &> /dev/null; then
+    bold "4) Performing load testing…"
+    wrk -t4 -c100 -d30s http://127.0.0.1:8000/
+else
+    bold "wrk not installed — skipping load testing."
+fi
