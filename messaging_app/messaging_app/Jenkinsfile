@@ -2,44 +2,89 @@ pipeline {
     agent any
 
     environment {
-        VENV_DIR = 'venv'
+        VENV = "${WORKSPACE}/venv"
+        REPORT = "${WORKSPACE}/report.xml"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Pull code from GitHub using the credentials you added
-                git branch: 'main',
-                    url: 'https://github.com/ochogwuprince92/alx-backend-python.git',
-                    credentialsId: 'github-credentials'
+                echo 'Checking out code from GitHub...'
+                checkout scm
             }
         }
 
-        stage('Setup Python') {
+        stage('Verify Structure') {
             steps {
-                // Create virtual environment and install dependencies
-                sh """
-                python3 -m venv ${VENV_DIR}
-                . ${VENV_DIR}/bin/activate
-                pip3 install --upgrade pip
-                pip3 install -r messaging_app/requirements.txt
-                """
+                echo 'Verifying project structure...'
+                sh 'ls -R'
+            }
+        }
+
+        stage('Set Up Python') {
+            steps {
+                echo 'Creating virtual environment and installing dependencies...'
+                sh '''
+                    python3 -m venv $VENV
+                    . $VENV/bin/activate
+                    pip install --upgrade pip
+                    pip install -r messaging_app/requirements.txt
+                '''
+            }
+        }
+
+        stage('Django Admin Check') {
+            steps {
+                echo 'Running Django checks...'
+                sh '''
+                    . $VENV/bin/activate
+                    python messaging_app/manage.py check
+                '''
+            }
+        }
+
+        stage('Run Code Quality') {
+            steps {
+                echo 'Running flake8 linting...'
+                sh '''
+                    . $VENV/bin/activate
+                    flake8 messaging_app/
+                '''
             }
         }
 
         stage('Run Tests') {
             steps {
-                // Run pytest and generate a JUnit-style report
-                sh """
-                . ${VENV_DIR}/bin/activate
-                pytest messaging_app/chats/tests.py --junitxml=report.xml
-                """
+                echo 'Running pytest...'
+                sh '''
+                    . $VENV/bin/activate
+                    pytest messaging_app/chats/tests.py --junitxml=$REPORT
+                '''
             }
-
             post {
                 always {
-                    // Archive the test report for Jenkins UI
-                    junit 'report.xml'
+                    junit "$REPORT"
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                echo 'Building Docker image...'
+                sh '''
+                    docker build -t your-dockerhub-username/messaging-app:latest messaging_app/
+                '''
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                echo 'Pushing Docker image to Docker Hub...'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                        docker push your-dockerhub-username/messaging-app:latest
+                    '''
                 }
             }
         }
@@ -47,7 +92,13 @@ pipeline {
 
     post {
         always {
-            echo 'Pipeline finished'
+            echo 'Pipeline finished!'
+        }
+        success {
+            echo 'Pipeline succeeded!'
+        }
+        failure {
+            echo 'Pipeline failed!'
         }
     }
 }
