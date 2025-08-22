@@ -2,8 +2,12 @@ name: Build and Push Docker Image
 
 on:
   push:
-    branches: [main, develop]  # builds on main or develop
-  workflow_dispatch:           # allows manual triggering
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch: # allows manual triggering
 
 jobs:
   docker:
