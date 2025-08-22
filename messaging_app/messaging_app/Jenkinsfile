@@ -11,6 +11,7 @@ pipeline {
             steps {
                 echo 'Checking out code from GitHub...'
                 checkout scm
+                sh 'git branch'
             }
         }
 
