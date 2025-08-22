@@ -48,8 +48,7 @@ pipeline {
             steps {
                 echo 'Running flake8 linting...'
                 sh '''
-                    . $VENV/bin/activate
-                    flake8 messaging_app/
+                    . $VENV/bin/activate && flake8 messaging_app/
                 '''
             }
         }
