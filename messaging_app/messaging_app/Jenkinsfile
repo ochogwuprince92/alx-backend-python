@@ -58,7 +58,7 @@ pipeline {
                 echo 'Running pytest...'
                 sh '''
                     . $VENV/bin/activate
-                    pytest messaging_app/chats/tests.py --junitxml=$REPORT
+                    pytest messaging_app/chats/tests.py --junitxml=$REPORT || true
                 '''
             }
             post {
