@@ -69,6 +69,7 @@ pipeline {
         }
 
         stage('Build Docker Image') {
+            agent { label 'docker-agent' }
             steps {
                 echo 'Building Docker image...'
                 sh '''
@@ -78,6 +79,7 @@ pipeline {
         }
 
         stage('Push Docker Image') {
+            agent { label 'docker-agent' }
             steps {
                 echo 'Pushing Docker image to Docker Hub...'
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
