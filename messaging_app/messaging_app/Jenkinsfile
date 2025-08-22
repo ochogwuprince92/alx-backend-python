@@ -32,7 +32,7 @@ pipeline {
                 // Run pytest and generate a JUnit-style report
                 sh """
                 . ${VENV_DIR}/bin/activate
-                pytest tests/ --junitxml=report.xml
+                pytest messaging_app/chats/tests.py --junitxml=report.xml
                 """
             }
 
