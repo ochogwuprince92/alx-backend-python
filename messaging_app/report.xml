@@ -1,1 +1,1 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="0" time="0.003" timestamp="2025-08-22T11:34:23.562708+01:00" hostname="khane" /></testsuites>
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="0.244" timestamp="2025-08-22T13:44:14.803085+01:00" hostname="khane"><testcase classname="messaging_app.chats.tests" name="test_example" time="0.001" /></testsuite></testsuites>

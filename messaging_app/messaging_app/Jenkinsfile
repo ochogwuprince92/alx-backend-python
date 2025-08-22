@@ -58,13 +58,13 @@ pipeline {
                 echo 'Running pytest...'
                 sh '''
                     . $VENV/bin/activate
-                    pytest messaging_app/chats/tests.py --junitxml=$REPORT || true
+                    pytest messaging_app/chats/tests.py --junitxml=messaging_app/report.xml || true
                 '''
             }
             post {
                 always {
-                    junit "$REPORT"
-                }
+            // Let Jenkins pick up the test report
+            junit 'messaging_app/report.xml'                }
             }
         }
 
